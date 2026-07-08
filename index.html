@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HT 신호등 AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+      background: #f4f7f5;
+      color: #16211c;
+    }
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    aside {
+      background: #101d18;
+      color: #f7fbf8;
+      padding: 28px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 36px;
+    }
+    .signal {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(#e94b4b 0 33%, #f2c44a 34% 66%, #31b86b 67%);
+    }
+    .menu-title {
+      color: #9fb0a9;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      margin: 22px 0 10px;
+    }
+    .menu-item {
+      border-radius: 8px;
+      padding: 13px 14px;
+      margin-bottom: 9px;
+      background: rgba(255,255,255,.06);
+      color: #dce8e2;
+    }
+    .menu-item.active {
+      background: #f7fbf8;
+      color: #101d18;
+      font-weight: 800;
+    }
+    main {
+      padding: 34px;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: #64736c;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.05;
+    }
+    .pill {
+      border: 1px solid #d9e2dd;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: white;
+      color: #64736c;
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.05fr) minmax(340px, .95fr);
+      gap: 22px;
+      align-items: start;
+    }
+    .panel {
+      background: white;
+      border: 1px solid #d9e2dd;
+      border-radius: 8px;
+      box-shadow: 0 18px 45px rgba(22,33,28,.08);
+    }
+    .ask {
+      padding: 26px;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 21px;
+    }
+    .hint {
+      margin: 0 0 20px;
+      color: #64736c;
+      line-height: 1.55;
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+    input {
+      min-width: 0;
+      height: 54px;
+      border: 1px solid #cbd7d1;
+      border-radius: 8px;
+      padding: 0 15px;
+      font-size: 16px;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+    }
+    .send {
+      border: 0;
+      border-radius: 8px;
+      background: #16211c;
+      color: white;
+      padding: 0 22px;
+      font-weight: 900;
+    }
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .example {
+      min-height: 46px;
+      border: 1px solid #d9e2dd;
+      border-radius: 8px;
+      background: #fbfdfc;
+      text-align: left;
+      padding: 0 12px;
+      color: #304039;
+    }
+    .flow {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid #d9e2dd;
+    }
+    .flow-head {
+      display: flex;
+      justify-content: space-between;
+      color: #64736c;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      border: 1px solid #d9e2dd;
+      border-radius: 8px;
+      padding: 0 10px;
+      margin-bottom: 9px;
+      color: #64736c;
+      background: #fbfdfc;
+    }
+    .step.done {
+      color: #16211c;
+      border-color: #bdd9c9;
+      background: #e8f6ee;
+    }
+    .num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #ecf1ee;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .done .num {
+      background: #148348;
+      color: white;
+    }
+    .result {
+      overflow: hidden;
+    }
+    .empty {
+      padding: 44px 24px;
+      text-align: center;
+      color: #64736c;
+      line-height: 1.6;
+    }
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 24px;
+      border-bottom: 1px solid #d9e2dd;
+    }
+    .verdict {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .light {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #148348;
+      box-shadow: 0 0 0 8px #e8f6ee;
+    }
+    .red .light {
+      background: #bd2d2d;
+      box-shadow: 0 0 0 8px #fae9e9;
+    }
+    .confidence {
+      color: #64736c;
+      text-align: right;
+      font-size: 13px;
+    }
+    .confidence strong {
+      display: block;
+      color: #16211c;
+      font-size: 28px;
+    }
+    .result-body {
+      padding: 22px 24px 24px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .metric {
+      border: 1px solid #d9e2dd;
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfdfc;
+    }
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      color: #64736c;
+    }
+    .metric-top strong {
+      color: #16211c;
+    }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #e9efec;
+      overflow: hidden;
+    }
+    .bar span {
+      display: block;
+      height: 100%;
+      width: var(--value);
+      background: #16211c;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 12px;
+      margin: 10px 0;
+      line-height: 1.5;
+    }
+    .row span {
+      color: #64736c;
+      font-weight: 800;
+    }
+    .recommend {
+      margin-top: 16px;
+      border-radius: 8px;
+      padding: 15px;
+      background: #e8f1fb;
+      border: 1px solid #bdd7ef;
+      line-height: 1.55;
+      color: #173c5c;
+    }
+    .recommend.danger {
+      background: #fae9e9;
+      border-color: #efc3c3;
+      color: #6f2020;
+    }
+    .data {
+      margin-top: 22px;
+      padding: 22px;
+    }
+    .data-item {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #d9e2dd;
+      border-radius: 8px;
+      background: #fbfdfc;
+      margin-top: 10px;
+    }
+    .data-item span {
+      color: #64736c;
+      font-weight: 800;
+    }
+    @media (max-width: 960px) {
+      .app { grid-template-columns: 1fr; }
+      aside { display: none; }
+      main { padding: 20px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .top, .input-row, .examples, .metrics, .row, .data-item {
+        grid-template-columns: 1fr;
+      }
+      .top, .result-head {
+        flex-direction: column;
+        align-items: start;
+      }
+      .confidence { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="signal"></div>HT 신호등 AI</div>
+      <div class="menu-title">AGENT</div>
+      <div class="menu-item active">질문 이해</div>
+      <div class="menu-item">ERP / MES 조회</div>
+      <div class="menu-item">생산 가능성 판단</div>
+      <div class="menu-item">대안 추천</div>
+      <div class="menu-title">MONITORING</div>
+      <div class="menu-item">부족 자재 예측</div>
+      <div class="menu-item">납기 위험도</div>
+      <div class="menu-item">설비 여유율</div>
+    </aside>
+
+    <main>
+      <div class="top">
+        <div>
+          <p class="eyebrow">Production Decision Agent</p>
+          <h1>무엇을 도와드릴까요?</h1>
+        </div>
+        <div class="pill">샘플 ERP 데이터 연결됨</div>
+      </div>
+
+      <div class="grid">
+        <section class="panel ask">
+          <h2>생산 가능 여부 질문</h2>
+          <p class="hint">제품명, 수량, 시작일을 자연어로 입력하면 원료, 설비, 인력, 납기 조건을 순서대로 확인합니다.</p>
+          <div class="input-row">
+            <input id="question" value="A제품을 20,000박스 8월10일부터 생산 가능한가?" aria-label="질문 입력" />
+            <button class="send" id="send">판단</button>
+          </div>
+          <div class="examples">
+            <button class="example">8월 10일 생산 가능해?</button>
+            <button class="example">A제품 재고 얼마야?</button>
+            <button class="example">생산량 500개 늘려도 돼?</button>
+            <button class="example">어떤 원료가 부족해?</button>
+            <button class="example">오늘 위험한 공정 있어?</button>
+            <button class="example">생산량 20% 늘리면?</button>
+          </div>
+          <div class="flow">
+            <div class="flow-head"><strong>실행 순서</strong><span id="elapsed">대기 중</span></div>
+            <div id="steps"></div>
+          </div>
+        </section>
+
+        <div>
+          <section class="panel result" id="result">
+            <div class="empty">질문을 입력하면 AI Agent가 조회 결과와 추천을 표시합니다.</div>
+          </section>
+          <section class="panel data">
+            <h2>조회된 핵심 데이터</h2>
+            <div id="dataList">
+              <div class="data-item"><span>상태</span><strong>질문 대기 중</strong></div>
+              <div class="data-item"><span>연동</span><strong>샘플 ERP / MES 데이터</strong></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const steps = ["질문 의도 분석", "생산계획 조회", "재고 조회", "원료 확인", "설비 확인", "작업자 확인", "납기 영향 확인", "추천 생성"];
+    const data = {
+      materialAStock: 880,
+      equipmentLoad: 72,
+      staffLoad: 84,
+      dueDate: "8월15일",
+      inboundDate: "8월12일"
+    };
+    const $ = (id) => document.getElementById(id);
+
+    function renderSteps(done = 0) {
+      $("steps").innerHTML = steps.map((s, i) => `
+        <div class="step ${i < done ? "done" : ""}">
+          <div class="num">${i + 1}</div>
+          <div>${s}</div>
+          <strong>${i < done ? "완료" : "대기"}</strong>
+        </div>
+      `).join("");
+    }
+
+    function parseQuestion(text) {
+      const number = text.replace(/,/g, "").match(/(\d+)\s*(박스|개)/);
+      const percent = text.match(/(\d+)\s*%/);
+      const date = text.match(/(\d{1,2})월\s*(\d{1,2})일/);
+      return {
+        intent: text.includes("재고") ? "재고조회" : text.includes("늘리") || percent ? "생산량시뮬레이션" : "생산가능성조회",
+        product: "A제품",
+        quantity: number ? Number(number[1]) : 20000,
+        unit: number ? number[2] : "박스",
+        startDate: date ? `${date[1]}월${date[2]}일` : "8월10일",
+        percent: percent ? Number(percent[1]) : 0
+      };
+    }
+
+    function judge(p) {
+      if (p.intent === "재고조회") {
+        return {
+          possible: true, label: "재고 조회 완료", confidence: 98,
+          material: 100, equipment: 72, staff: 84, due: "문제없음",
+          reason: "완제품 재고 3,200박스, 원료 B 충분, 원료 A는 대량 생산 시 추가 확인 필요",
+          completion: "즉시 확인",
+          recommendation: "A제품 20,000박스 이상 생산 계획이 있으면 원료 A 입고일을 먼저 확인하는 것이 좋습니다."
+        };
+      }
+      if (p.percent > 0 || p.intent === "생산량시뮬레이션") {
+        return {
+          possible: true, label: "생산 가능", confidence: 91,
+          material: 76, equipment: 84, staff: 91, due: "주의 필요",
+          reason: "생산량 증가 시 원료 C가 3일 후 부족할 가능성이 있습니다.",
+          completion: "8월14일",
+          recommendation: "추가 구매가 필요합니다. 예상 비용은 +320만원이며, 지금 발주하면 납기 위험을 낮출 수 있습니다."
+        };
+      }
+      const requiredA = Math.round(p.quantity / 20);
+      const shortage = Math.max(0, requiredA - data.materialAStock);
+      if (shortage > 0) {
+        return {
+          possible: false, label: "생산 불가", confidence: 96,
+          material: Math.round((data.materialAStock / requiredA) * 100), equipment: 72, staff: 84, due: "현재 일정 지연 가능",
+          reason: `원료 A가 ${shortage}kg 부족합니다.`,
+          completion: "8월13일 이후 가능",
+          recommendation: `${data.inboundDate} 입고 확인 후 8월13일부터 생산을 시작하는 일정이 가장 안전합니다.`
+        };
+      }
+      return {
+        possible: true, label: "생산 가능", confidence: 95,
+        material: 100, equipment: 72, staff: 84, due: "문제없음",
+        reason: "원료 충분, 설비 여유 18%, 인력 가능, 납기 영향 없음",
+        completion: "8월13일",
+        recommendation: "현재 조건에서는 지금 생산 시작을 권장합니다."
+      };
+    }
+
+    function metric(name, value, text) {
+      return `
+        <div class="metric">
+          <div class="metric-top"><span>${name}</span><strong>${text || value + "%"}</strong></div>
+          <div class="bar"><span style="--value:${Math.max(0, Math.min(100, value))}%"></span></div>
+        </div>
+      `;
+    }
+
+    function renderResult(p, d) {
+      $("result").innerHTML = `
+        <div class="result-head">
+          <div class="verdict ${d.possible ? "" : "red"}"><span class="light"></span>${d.label}</div>
+          <div class="confidence">신뢰도<strong>${d.confidence}%</strong></div>
+        </div>
+        <div class="result-body">
+          <div class="metrics">
+            ${metric("원료", d.material)}
+            ${metric("설비", d.equipment)}
+            ${metric("인력", d.staff)}
+            ${metric("납기", d.due === "문제없음" ? 100 : 64, d.due)}
+          </div>
+          <div class="row"><span>질문 의도</span><strong>${p.intent}</strong></div>
+          <div class="row"><span>대상</span><strong>${p.product} ${p.quantity.toLocaleString()}${p.unit}, ${p.startDate} 시작</strong></div>
+          <div class="row"><span>근거</span><strong>${d.reason}</strong></div>
+          <div class="row"><span>예상 완료</span><strong>${d.completion}</strong></div>
+          <div class="recommend ${d.possible ? "" : "danger"}"><strong>AI 추천</strong><br>${d.recommendation}</div>
+        </div>
+      `;
+
+      $("dataList").innerHTML = [
+        ["생산계획", `${p.startDate} ${p.product} ${p.quantity.toLocaleString()}${p.unit}`],
+        ["완제품 재고", "3,200박스"],
+        ["원료 A", `${data.materialAStock}kg 보유 / ${Math.round(p.quantity / 20)}kg 필요`],
+        ["원료 B", "1,480kg 보유 / 1,220kg 필요"],
+        ["설비 가동률", `${d.equipment}%`],
+        ["작업자 부하", `${d.staff}%`],
+        ["납기", data.dueDate]
+      ].map(([a, b]) => `<div class="data-item"><span>${a}</span><strong>${b}</strong></div>`).join("");
+    }
+
+    async function run() {
+      $("elapsed").textContent = "분석 중";
+      for (let i = 1; i <= steps.length; i++) {
+        await new Promise(r => setTimeout(r, 120));
+        renderSteps(i);
+      }
+      const parsed = parseQuestion($("question").value);
+      renderResult(parsed, judge(parsed));
+      $("elapsed").textContent = "약 1초 만에 판단";
+    }
+
+    $("send").addEventListener("click", run);
+    document.querySelectorAll(".example").forEach(btn => {
+      btn.addEventListener("click", () => {
+        $("question").value = btn.textContent.trim();
+        run();
+      });
+    });
+    renderSteps();
+  </script>
+</body>
+</html>
